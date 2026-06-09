@@ -1,0 +1,36 @@
+{
+  "name": "openclaw-client",
+  "version": "2.5.7",
+  "description": "Web-based chat interface for OpenClaw AI agents",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "sync:env": "node scripts/sync-copilot-env.mjs",
+    "openclaw:up": "node scripts/openclaw-stack.mjs up",
+    "openclaw:ensure": "node scripts/openclaw-stack.mjs ensure",
+    "openclaw:down": "node scripts/openclaw-stack.mjs down",
+    "openclaw:status": "node scripts/openclaw-stack.mjs status",
+    "openclaw:logs": "node scripts/openclaw-stack.mjs logs",
+    "openclaw:recreate": "node scripts/openclaw-stack.mjs recreate",
+    "dev": "node scripts/dev.js",
+    "start": "node scripts/start.js",
+    "stop": "node scripts/stop.js",
+    "harness:check": "node scripts/check-invariants.mjs",
+    "harness:verify": "node scripts/harness-verify.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:mocked": "playwright test --grep @mocked",
+    "test:e2e:live": "cross-env E2E_LIVE=1 playwright test --grep @live",
+    "playwright:install": "playwright install chromium"
+  },
+  "bin": {
+    "openclaw-client": "scripts/cli.mjs",
+    "openclaw_client": "scripts/cli.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "cross-env": "^7.0.3",
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-window": "^7.4.0"
+  }
+}

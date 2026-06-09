@@ -1,0 +1,17 @@
+event: RUN_STARTED
+data: {"type":"RUN_STARTED","runId":"run_test"}
+
+event: TEXT_MESSAGE_START
+data: {"type":"TEXT_MESSAGE_START","messageId":"m1"}
+
+event: TEXT_MESSAGE_CONTENT
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"m1","delta":"Olá "}
+
+event: TEXT_MESSAGE_CONTENT
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"m1","delta":"mundo."}
+
+event: TEXT_MESSAGE_END
+data: {"type":"TEXT_MESSAGE_END","messageId":"m1"}
+
+event: RUN_FINISHED
+data: {"type":"RUN_FINISHED","runId":"run_test"}

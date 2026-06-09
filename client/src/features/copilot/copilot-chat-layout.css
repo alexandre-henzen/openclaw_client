@@ -1,0 +1,327 @@
+/**
+
+ * Full-height embedded CopilotKit chat (port of reference globals.css chat layout).
+
+ * Without this, .copilotKitChat has no height and messages scroll the page instead.
+
+ */
+
+.openclaw-copilot-shell {
+
+  display: flex;
+
+  flex-direction: column;
+
+  flex: 1;
+
+  min-height: 0;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  width: 100%;
+
+  max-width: 100%;
+
+  box-sizing: border-box;
+
+  background: #fff;
+
+}
+
+
+
+.openclaw-copilot-shell .openclaw-copilot-surface {
+
+  flex: 1;
+
+  min-height: 0;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  display: flex;
+
+  flex-direction: column;
+
+}
+
+
+
+.openclaw-copilot-shell .openclaw-copilot-surface > * {
+
+  flex: 1;
+
+  min-height: 0;
+
+  min-width: 0;
+
+  max-width: 100%;
+
+}
+
+
+
+.copilot-chat-light {
+
+  --copilot-kit-primary-color: rgb(28, 28, 28);
+
+  --copilot-kit-contrast-color: rgb(255, 255, 255);
+
+  --copilot-kit-background-color: rgb(255, 255, 255);
+
+  --copilot-kit-input-background-color: #fbfbfb;
+
+  --copilot-kit-secondary-color: rgb(255, 255, 255);
+
+  --copilot-kit-secondary-contrast-color: rgb(28, 28, 28);
+
+  --copilot-kit-separator-color: rgb(200, 200, 200);
+
+  --copilot-kit-muted-color: rgb(160, 160, 160);
+
+  background: #fff;
+
+  color: #1a1a1a;
+
+}
+
+
+
+.openclaw-copilot-shell .copilotKitChat {
+
+  height: 100%;
+
+  flex: 1;
+
+  min-height: 0;
+
+  min-width: 0;
+
+  max-width: 100%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  width: 100%;
+
+  overflow: hidden;
+
+}
+
+
+
+.openclaw-copilot-shell .copilotKitChatBody {
+
+  flex: 1;
+
+  min-height: 0;
+
+  min-width: 0;
+
+  max-width: 100%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  overflow: hidden;
+
+}
+
+
+
+.openclaw-copilot-shell .copilotKitMessages {
+
+  flex: 1 1 0;
+
+  min-height: 0;
+
+  min-width: 0;
+
+  max-width: 100%;
+
+  /* CopilotKit default is overflow-y: scroll (always visible). */
+
+  overflow-y: auto !important;
+
+  overflow-x: hidden !important;
+
+}
+
+
+
+.openclaw-copilot-shell .copilotKitMessagesContainer {
+
+  flex: 0 0 auto;
+
+  max-width: 100%;
+
+  padding-left: 16px;
+
+  padding-right: 16px;
+
+  box-sizing: border-box;
+
+}
+
+
+
+.openclaw-copilot-shell .copilotKitInputContainer {
+
+  flex-shrink: 0;
+
+  min-width: 0;
+
+  max-width: 100%;
+
+  overflow-x: hidden;
+
+  padding-left: 16px;
+
+  padding-right: 16px;
+
+  box-sizing: border-box;
+
+}
+
+
+
+.openclaw-copilot-shell .copilotKitInput {
+
+  width: 100% !important;
+
+  max-width: 100% !important;
+
+  margin: 0 !important;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  flex-direction: column;
+
+}
+
+
+
+.openclaw-copilot-shell .copilotKitInput > textarea {
+
+  width: 100% !important;
+
+  max-width: 100% !important;
+
+  text-align: left !important;
+
+  direction: ltr !important;
+
+  overflow-y: auto !important;
+
+  overflow-x: hidden !important;
+
+}
+
+
+
+.copilot-chat-light .copilotKitMessages,
+
+.copilot-chat-light .copilotKitMessagesContainer,
+
+.copilot-chat-light .copilotKitChat,
+
+.copilot-chat-light .copilotKitInput {
+
+  background-color: var(--copilot-kit-background-color) !important;
+
+  color: var(--copilot-kit-secondary-contrast-color) !important;
+
+}
+
+
+
+.copilot-chat-light .copilotKitAssistantMessage,
+
+.copilot-chat-light .copilotKitUserMessage {
+
+  background: transparent !important;
+
+  color: var(--copilot-kit-secondary-contrast-color) !important;
+
+}
+
+
+
+.copilot-chat-light .copilotKitInput textarea {
+
+  background: var(--copilot-kit-input-background-color) !important;
+
+  color: var(--copilot-kit-secondary-contrast-color) !important;
+
+}
+
+
+
+.openclaw-copilot-shell .copilotKitMessages img,
+
+.openclaw-copilot-shell .copilotKitMessages video {
+
+  max-width: 100%;
+
+  height: auto;
+
+}
+
+
+
+/* Artefatos inline no fluxo da conversa (após a última resposta do assistente) */
+
+.inline-artifacts {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+
+  margin: 12px 0 16px;
+
+  max-width: 100%;
+
+  width: 100%;
+
+}
+
+
+
+.inline-artifacts [data-testid="artifact-iframe"] {
+
+  min-height: 360px;
+
+}
+
+
+
+/* Web Inspector / dev console — showDevConsole={false}; fallback hide if mounted */
+
+cpk-web-inspector,
+
+.copilotKitDevConsole {
+
+  display: none !important;
+
+}
+
+
+
+/* Hide CopilotKit "Powered by" footer in embedded shell */
+
+.openclaw-copilot-shell .poweredByContainer .poweredBy {
+
+  display: none !important;
+
+}
+
+

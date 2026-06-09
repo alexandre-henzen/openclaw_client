@@ -1,0 +1,1287 @@
+paths:
+  /agent:
+    get:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: listAgents
+      summary: List all agents
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            enum: [5, 10, 20, 40, 60, 100]
+            default: 40
+        - in: query
+          name: sortField
+          schema:
+            type: string
+            enum: [name, createdAt, updatedAt]
+            default: createdAt
+        - in: query
+          name: sortType
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        200:
+          description: Paginated list of agents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentListResponse'
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: createAgent
+      summary: Create a new agent
+      description: Creates an agent and registers it with the OpenClaw gateway.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/agentReqBody'
+      responses:
+        200:
+          description: Created agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agent'
+        401:
+          $ref: '#/components/responses/401'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /agent/sync:
+    post:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: syncAgents
+      summary: Sync agents, conversations, and messages from OpenClaw
+      description: >
+        Scans the OpenClaw filesystem for agents, sessions, and messages that
+        are not yet in the local database and imports them.
+      responses:
+        200:
+          description: Sync result counts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/syncResponse'
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+  /agent/{id}:
+    get:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: getAgent
+      summary: Get an agent by ID
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: Agent object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agent'
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+    patch:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: updateAgent
+      summary: Update an agent's name
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/agentUpdateBody'
+      responses:
+        200:
+          description: Updated agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agent'
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: deleteAgent
+      summary: Soft-delete an agent and its conversations
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          $ref: '#/components/responses/empty'
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+  /agent/{id}/workspace:
+    get:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: getWorkspaceMeta
+      summary: Get workspace metadata for an agent
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: Workspace metadata (file list, sizes, etc.)
+          content:
+            application/json:
+              schema:
+                type: object
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+  /agent/{id}/workspace/file/{filename}:
+    get:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: getWorkspaceFile
+      summary: Read a workspace file
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/workspaceFilename'
+      responses:
+        200:
+          description: File content
+          content:
+            application/json:
+              schema:
+                type: object
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: putWorkspaceFile
+      summary: Write a workspace file
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/workspaceFilename'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  description: File content to write
+      responses:
+        200:
+          description: Write result
+          content:
+            application/json:
+              schema:
+                type: object
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /agent/{id}/workspace/uploads/{filename}:
+    get:
+      tags:
+        - agent
+      operationId: serveWorkspaceUpload
+      summary: Serve a file uploaded to the agent workspace
+      description: Returns the raw file. No authentication required.
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - in: path
+          name: filename
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Raw file bytes
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        404:
+          description: Agent or file not found
+        500:
+          $ref: '#/components/responses/500'
+  /agent/{id}/conversation/{conversationId}/session-settings:
+    get:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: getSessionSettings
+      summary: Get session settings for a conversation
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/conversationId'
+      responses:
+        200:
+          description: Session settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  settings:
+                    type: object
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+    patch:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: patchSessionSettings
+      summary: Update session settings for a conversation
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/conversationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Arbitrary settings to merge into the session
+      responses:
+        200:
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                type: object
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+  /agent/{id}/budget:
+    get:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: getAgentBudget
+      summary: Get per-agent character/token budgets
+      description: >
+        Returns the override, default, and effective value for every character
+        budget that OpenClaw exposes per agent (memory fetch size, tool result
+        caps, post-compaction cap, skills prompt cap, etc.).
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: Budget configuration for this agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentBudgetResponse'
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+    patch:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: updateAgentBudget
+      summary: Update per-agent character/token budgets
+      description: >
+        Patches one or more budget fields. Send a number to set an override,
+        or null to unset the override and fall back to the default.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/agentBudgetPatch'
+      responses:
+        200:
+          description: Updated budget configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentBudgetMutationResponse'
+        400:
+          description: Budget update failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentBudgetMutationResponse'
+        401:
+          $ref: '#/components/responses/401'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /agent/{id}/provider-models:
+    get:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: getAgentProviderModels
+      summary: List models for the agent's currently configured provider
+      description: >
+        Returns the agent's current model and every model exposed by that
+        provider (derived from the `provider/model` prefix). Use to power a
+        scoped model picker — no provider switching is offered because that
+        would require different credentials.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: Provider-scoped model catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentProviderModelsResponse'
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+    patch:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: updateAgentProviderModel
+      summary: Hot-swap the agent's model (same provider)
+      description: >
+        Updates the agent's configured model via the Gateway RPC `agents.update`
+        so the change takes effect on the next turn without a gateway restart.
+        When `conversationId` is provided, any pinned `modelOverride` on that
+        session is cleared via `sessions.patch` so the running chat picks up
+        the new default immediately.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/agentProviderModelPatch'
+      responses:
+        200:
+          description: Updated model configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentProviderModelMutationResponse'
+        400:
+          description: Model update failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentProviderModelMutationResponse'
+        401:
+          $ref: '#/components/responses/401'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /agent/{id}/usage:
+    get:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: getAgentUsage
+      summary: Get aggregated token usage and activity stats for an agent
+      description: >
+        Aggregates the gateway's per-session `sessions.usage` data for this
+        agent into a single response: total tokens (input/output/cache),
+        estimated cost, message and tool counts, daily breakdown, per-model
+        rollups, and a list of the agent's sessions sorted by recency. The
+        response is served from a short in-memory cache to keep the UI snappy.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: Aggregated usage for this agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentUsageResponse'
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+  /agent/{id}/limits:
+    get:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: getAgentLimits
+      summary: Get per-agent USD spend caps + current spend per window
+      description: >
+        Returns the cost caps stored for this agent (daily / monthly / all-time)
+        alongside the live spend bucketed into those same windows. The current
+        spend is derived from the gateway's `sessions.usage` payload (cached for
+        ~30 seconds). All caps are in USD; `null` means no limit.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: Limits + current spend per window
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentLimitsResponse'
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+    patch:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: updateAgentLimits
+      summary: Update per-agent USD spend caps
+      description: >
+        Sets or clears any subset of `costLimitDaily`, `costLimitMonthly`,
+        `costLimitTotal`. Pass `null` to clear a cap, a non-negative number to
+        set it. Returns the same shape as GET.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/agentLimitsPatch'
+      responses:
+        200:
+          description: Updated limits + live spend
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentLimitsResponse'
+        400:
+          description: Invalid limit value
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /agent/{id}/skills:
+    get:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: getAgentSkills
+      summary: Get per-agent skill allowlist
+      description: >
+        Returns the skill allowlist configured for this agent. A null override
+        means the agent inherits `agents.defaults.skills`. An empty array means
+        the agent is restricted to no skills. Also returns the full catalog of
+        available skills so a UI can render a picker.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: Skill configuration for this agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentSkillsResponse'
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+    patch:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: updateAgentSkills
+      summary: Set or clear the per-agent skill allowlist
+      description: >
+        Pass an array of skill names to pin an explicit allowlist (this
+        replaces, not merges with, the inherited defaults). Pass null to
+        unset the override.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                skills:
+                  type: array
+                  nullable: true
+                  items:
+                    type: string
+                  description: Allowed skill names, or null to inherit defaults.
+      responses:
+        200:
+          description: Updated skill configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentSkillsMutationResponse'
+        400:
+          description: Skill update failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentSkillsMutationResponse'
+        401:
+          $ref: '#/components/responses/401'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /agent/{id}/subagents:
+    get:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: getAgentSubagentsConfig
+      summary: Get per-agent subagent settings
+      description: >
+        Returns the allow-list of child agents this agent may spawn, the
+        default model and thinking level for spawned subagents, and whether
+        an explicit `agent_id` is required on spawn calls.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: Subagent configuration for this agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentSubagentsResponse'
+        404:
+          description: Agent not found
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+    patch:
+      tags:
+        - agent
+      security:
+        - bearerAuth: []
+      operationId: updateAgentSubagentsConfig
+      summary: Update per-agent subagent settings
+      description: >
+        Patches any subset of `allowAgents`, `model`, `thinking`, or
+        `requireAgentId`. Send null for any field to unset its override and
+        fall back to system defaults.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/agentSubagentsPatch'
+      responses:
+        200:
+          description: Updated subagent configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentSubagentsMutationResponse'
+        400:
+          description: Subagent update failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/agentSubagentsMutationResponse'
+        401:
+          $ref: '#/components/responses/401'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+#
+#
+#
+components:
+  ##
+  parameters:
+    id:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    conversationId:
+      in: path
+      name: conversationId
+      required: true
+      schema:
+        type: integer
+    workspaceFilename:
+      in: path
+      name: filename
+      required: true
+      schema:
+        type: string
+        enum:
+          [
+            AGENTS.md,
+            SOUL.md,
+            TOOLS.md,
+            IDENTITY.md,
+            USER.md,
+            HEARTBEAT.md,
+            BOOTSTRAP.md,
+            MEMORY.md,
+          ]
+  ##
+  schemas:
+    #
+    agent:
+      type: object
+      properties:
+        _id:
+          type: integer
+        name:
+          type: string
+        openclawAgentId:
+          type: string
+        createdBy:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        model:
+          type: string
+          nullable: true
+          description: Currently assigned AI model
+    #
+    agentListResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/agent'
+    #
+    agentReqBody:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: 'Research Assistant'
+        openclawAgentId:
+          type: string
+          example: 'research-assistant'
+          description: Optional slug for the OpenClaw agent. Auto-generated from name if omitted.
+        interactive:
+          type: boolean
+          description: If true, skip automatic gateway registration (for interactive setup flows).
+    #
+    agentUpdateBody:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: 'Updated Agent Name'
+    #
+    syncResponse:
+      type: object
+      properties:
+        syncedAgents:
+          type: integer
+          description: Number of newly imported agents
+        syncedConversations:
+          type: integer
+          description: Number of newly imported conversations
+        syncedMessages:
+          type: integer
+          description: Number of newly imported messages
+    #
+    agentBudgetField:
+      type: object
+      description: One character/token budget that can be overridden per agent.
+      properties:
+        key:
+          type: string
+          enum:
+            - memoryGetMaxChars
+            - memoryGetDefaultLines
+            - toolResultMaxChars
+            - postCompactionMaxChars
+            - maxSkillsPromptChars
+        label:
+          type: string
+        description:
+          type: string
+        min:
+          type: integer
+        max:
+          type: integer
+        override:
+          type: integer
+          nullable: true
+          description: Value set on this agent (null if inheriting default).
+        default:
+          type: integer
+          nullable: true
+          description: Inherited default from agents.defaults.
+        effective:
+          type: integer
+          nullable: true
+          description: Override if set, otherwise default.
+    #
+    agentBudgetResponse:
+      type: object
+      properties:
+        agentId:
+          type: string
+        known:
+          type: boolean
+          description: Whether this agent is present in openclaw.json.
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/agentBudgetField'
+    #
+    agentBudgetPatch:
+      type: object
+      description: >
+        Any subset of known budget keys mapped to a number (override) or null
+        (unset override).
+      additionalProperties:
+        type: integer
+        nullable: true
+    #
+    agentBudgetMutationResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+        config:
+          $ref: '#/components/schemas/agentBudgetResponse'
+    #
+    agentProviderModel:
+      type: object
+      description: A single model entry surfaced by `openclaw models list --provider <id>`.
+      properties:
+        key:
+          type: string
+          description: Full model key (e.g. `google/gemini-2.5-pro`).
+        name:
+          type: string
+        contextWindow:
+          type: integer
+          nullable: true
+        local:
+          type: boolean
+        available:
+          type: boolean
+          description: Whether the agent currently has credentials for this provider.
+        missing:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+    #
+    agentProviderModelsResponse:
+      type: object
+      properties:
+        agentId:
+          type: string
+        known:
+          type: boolean
+        currentModel:
+          type: string
+          nullable: true
+        provider:
+          type: string
+          nullable: true
+          description: Provider id derived from the `provider/model` prefix.
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/agentProviderModel'
+    #
+    agentProviderModelPatch:
+      type: object
+      required:
+        - model
+      properties:
+        model:
+          type: string
+          description: Full model key (must belong to the agent's current provider).
+        conversationId:
+          type: integer
+          nullable: true
+          description: When provided, also clears any session override so the change applies mid-chat.
+    #
+    agentProviderModelMutationResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+        restartHint:
+          type: string
+          nullable: true
+          description: Present when a gateway restart or new conversation is required.
+        config:
+          $ref: '#/components/schemas/agentProviderModelsResponse'
+    #
+    agentUsageTotals:
+      type: object
+      properties:
+        input:
+          type: integer
+        output:
+          type: integer
+        cacheRead:
+          type: integer
+        cacheWrite:
+          type: integer
+        totalTokens:
+          type: integer
+        totalCost:
+          type: number
+          format: double
+          description: Estimated cost in USD.
+    #
+    agentUsageDailyPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          description: ISO date (YYYY-MM-DD).
+        tokens:
+          type: integer
+        cost:
+          type: number
+          format: double
+    #
+    agentUsageModelRow:
+      type: object
+      properties:
+        provider:
+          type: string
+        model:
+          type: string
+        count:
+          type: integer
+          description: Number of turns served by this model.
+        input:
+          type: integer
+        output:
+          type: integer
+        cacheRead:
+          type: integer
+        cacheWrite:
+          type: integer
+        totalTokens:
+          type: integer
+        totalCost:
+          type: number
+          format: double
+    #
+    agentUsageToolRow:
+      type: object
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+    #
+    agentUsageSessionRow:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+          nullable: true
+        channel:
+          type: string
+          nullable: true
+        updatedAt:
+          type: integer
+          nullable: true
+        totalTokens:
+          type: integer
+        totalCost:
+          type: number
+          format: double
+        modelProvider:
+          type: string
+          nullable: true
+        model:
+          type: string
+          nullable: true
+    #
+    agentUsageResponse:
+      type: object
+      properties:
+        agentId:
+          type: string
+        known:
+          type: boolean
+          description: True when the gateway responded with usage data.
+        range:
+          type: object
+          properties:
+            startDate:
+              type: string
+              nullable: true
+            endDate:
+              type: string
+              nullable: true
+        sessionCount:
+          type: integer
+        firstActivity:
+          type: integer
+          nullable: true
+          description: Earliest activity timestamp across this agent's sessions (ms).
+        lastActivity:
+          type: integer
+          nullable: true
+        totals:
+          $ref: '#/components/schemas/agentUsageTotals'
+        messageCounts:
+          type: object
+          properties:
+            total:
+              type: integer
+            user:
+              type: integer
+            assistant:
+              type: integer
+            toolCalls:
+              type: integer
+            errors:
+              type: integer
+        latency:
+          type: object
+          properties:
+            count:
+              type: integer
+            avgMs:
+              type: number
+              format: double
+            p95Ms:
+              type: number
+              format: double
+        daily:
+          type: array
+          items:
+            $ref: '#/components/schemas/agentUsageDailyPoint'
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/agentUsageModelRow'
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/agentUsageToolRow'
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/agentUsageSessionRow'
+    #
+    agentLimitWindow:
+      type: object
+      properties:
+        limit:
+          type: number
+          nullable: true
+          description: Cap in USD, or null when no cap is set.
+        spent:
+          type: number
+          description: Spend (USD) accumulated in this window so far.
+        ratio:
+          type: number
+          nullable: true
+          description: spent / limit. Null when no cap is set.
+        exceeded:
+          type: boolean
+        nearLimit:
+          type: boolean
+          description: True when ratio >= 0.8 and not yet exceeded.
+    #
+    agentLimitsResponse:
+      type: object
+      properties:
+        agentId:
+          type: string
+        today:
+          type: string
+          description: ISO date used to bucket the daily window (host TZ).
+        thisMonth:
+          type: string
+          description: ISO YYYY-MM bucket for the monthly window.
+        windows:
+          type: object
+          properties:
+            daily:
+              $ref: '#/components/schemas/agentLimitWindow'
+            monthly:
+              $ref: '#/components/schemas/agentLimitWindow'
+            total:
+              $ref: '#/components/schemas/agentLimitWindow'
+        stored:
+          type: object
+          description: Raw cap values stored on the agent record.
+          properties:
+            costLimitDaily:
+              type: number
+              nullable: true
+            costLimitMonthly:
+              type: number
+              nullable: true
+            costLimitTotal:
+              type: number
+              nullable: true
+    #
+    agentLimitsPatch:
+      type: object
+      description: >
+        Any subset of these keys may be passed. Use `null` to clear a cap.
+      properties:
+        costLimitDaily:
+          type: number
+          nullable: true
+        costLimitMonthly:
+          type: number
+          nullable: true
+        costLimitTotal:
+          type: number
+          nullable: true
+    #
+    agentSkillSummary:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        emoji:
+          type: string
+        eligible:
+          type: boolean
+        blockedByAllowlist:
+          type: boolean
+        source:
+          type: string
+        bundled:
+          type: boolean
+    #
+    agentSkillsResponse:
+      type: object
+      properties:
+        agentId:
+          type: string
+        known:
+          type: boolean
+        override:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Explicit allowlist, or null when inheriting defaults.
+        available:
+          type: array
+          items:
+            $ref: '#/components/schemas/agentSkillSummary'
+    #
+    agentSkillsMutationResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+        config:
+          $ref: '#/components/schemas/agentSkillsResponse'
+    #
+    agentSubagentsConfig:
+      type: object
+      properties:
+        allowAgents:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Explicit child-agent allowlist, or null when unrestricted.
+        thinking:
+          type: string
+          nullable: true
+          description: >-
+            One of off, minimal, low, medium, high, xhigh, adaptive, max, or
+            null/inherit. Per-model the daemon may only advertise a subset.
+        requireAgentId:
+          type: boolean
+          nullable: true
+    #
+    agentRef:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          nullable: true
+    #
+    agentSubagentsResponse:
+      type: object
+      properties:
+        agentId:
+          type: string
+        known:
+          type: boolean
+        config:
+          $ref: '#/components/schemas/agentSubagentsConfig'
+        availableAgents:
+          type: array
+          items:
+            $ref: '#/components/schemas/agentRef'
+          description: Configured agents (excluding self) that can appear in allowAgents.
+    #
+    agentSubagentsPatch:
+      type: object
+      description: Any subset of subagent fields. Pass null to unset an override.
+      properties:
+        allowAgents:
+          type: array
+          nullable: true
+          items:
+            type: string
+        thinking:
+          type: string
+          nullable: true
+          enum: [off, minimal, low, medium, high, xhigh, adaptive, max, inherit]
+        requireAgentId:
+          type: boolean
+          nullable: true
+    #
+    agentSubagentsMutationResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+        config:
+          $ref: '#/components/schemas/agentSubagentsResponse'

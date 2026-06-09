@@ -1,0 +1,21 @@
+{
+  "runId": "run_harness_chart",
+  "backend": "e2b",
+  "language": "python",
+  "sourceSha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "ok",
+  "exitCode": 0,
+  "stdout": "chart emitted\n",
+  "stderr": "",
+  "durationMs": 420,
+  "files": [
+    {
+      "path": "out/harness-chart.html",
+      "mimeType": "text/html",
+      "sizeBytes": 128,
+      "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "text": "<!doctype html><html><body><h1 id=\"harness-chart\">Harness Chart</h1><svg width=\"120\" height=\"60\"><rect width=\"120\" height=\"60\" fill=\"#4f46e5\"/></svg></body></html>"
+    }
+  ],
+  "diagnostics": []
+}
