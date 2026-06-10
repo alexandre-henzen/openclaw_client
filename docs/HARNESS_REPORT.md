@@ -368,4 +368,25 @@ npm run test:e2e:live                      # 4/4 (login, chat live, artefatos, p
 npm run harness:verify                     # composito — all gates passed
 ```
 
-Lint da API permanece com 169 erros pré-existentes (Airbnb estrito; contagem idêntica ao baseline antes desta sessão — nenhum erro novo introduzido). Lint do client zerado (2 erros pré-existentes corrigidos).
+Lint da API (Airbnb, 169 erros) substituído por `typescript-eslint` recommended — ver entrada abaixo.
+
+---
+
+## 2026-06-09 — Lint alinhado ao harness ✅
+
+### Mudanças
+
+- Removido **Airbnb** da API (`api/.eslintrc.js` → `api/eslint.config.mjs` + `typescript-eslint` recommended).
+- `npm run lint` na API analisa só `src/` (ignora `build/`).
+- `api/package.json`: script `test` agrega fixtures + security + auth + proxy + artifacts.
+- `scripts/harness-verify.mjs`: pirâmide — `harness:check` → lint → build → test → smokes → Playwright live.
+
+### Verificação
+
+```powershell
+cd api; npm run lint     # 0 errors (6 warnings no-console em PTY/logging)
+cd client; npm run lint  # 0 errors
+cd api; npm run build; npm run test
+cd client; npm test
+$env:HARNESS_SKIP_SMOKE="1"; $env:HARNESS_SKIP_E2E="1"; npm run harness:verify
+```

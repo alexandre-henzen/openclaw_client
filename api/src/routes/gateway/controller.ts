@@ -2,7 +2,6 @@
  * `import * as controller` reads naturally there. This one just exposes
  * a single GET — keeping the same pattern for consistency rather than
  * switching to a default export. */
-/* eslint-disable import/prefer-default-export */
 import { RequestHandler } from 'express';
 import { gateway } from '../../services/openclawGateway';
 

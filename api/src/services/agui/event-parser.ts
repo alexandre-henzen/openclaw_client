@@ -76,7 +76,6 @@ export async function* parseAguiStream(
 
   (async () => {
     try {
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { value, done: rDone } = await reader.read();
         if (rDone) break;

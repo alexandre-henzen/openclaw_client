@@ -35,6 +35,7 @@ Always use this loop before claiming completion:
 - Use Playwright for all e2e web user journeys.
 - The final Playwright readiness test must run against the real application as a user would, without mocks.
 - Mocks are allowed for narrow unit tests only, not for final integration/e2e readiness.
+- **Lint** (`typescript-eslint` on `src/`): static hygiene only (unused vars, obvious footguns). Domain security rules live in `harness:check` (AGENTS.md invariants), not in ESLint style presets.
 
 ## Completion rule
 

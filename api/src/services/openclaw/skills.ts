@@ -59,7 +59,6 @@ const skillsCache = withCache<SkillInfo[]>(SKILLS_CACHE_TTL, () => {
   return parseSkillList(raw);
 });
 
-// eslint-disable-next-line import/prefer-default-export
 export function listSkills(): SkillInfo[] {
   try {
     return skillsCache.get();

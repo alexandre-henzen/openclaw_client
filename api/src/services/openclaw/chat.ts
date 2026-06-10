@@ -287,7 +287,6 @@ function runAgentViaGateway(
   return { kill: () => gateway.offEvent(listenerKey) };
 }
 
-// eslint-disable-next-line import/prefer-default-export
 export async function runChat(
   agentId: string,
   message: string,

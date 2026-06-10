@@ -22,7 +22,7 @@ function resolveBridge(): string {
   if (found) return found;
   console.error(
     `[pty] bridge script not found, tried: ${candidates.join(', ')}`
-  ); /* eslint-disable-line */
+  );  
   return candidates[0];
 }
 
@@ -232,7 +232,7 @@ export default function attachPtyWebSocket(server: HttpServer): void {
   const python3Bin = findBinary('python3');
   console.log(
     `[pty] openclaw: ${openclawBin}, python3: ${python3Bin}, bridge: ${BRIDGE_SCRIPT}`
-  ); /* eslint-disable-line */
+  );  
 
   server.on('upgrade', (req, socket, head) => {
     const parsed = new URL(req.url || '', `http://${req.headers.host}`);
@@ -275,7 +275,7 @@ export default function attachPtyWebSocket(server: HttpServer): void {
         const term = trySpawnNodePty(openclawBin, agentName);
         console.log(
           `[pty] node-pty pid=${term.pid} agent="${agentName}"`
-        ); /* eslint-disable-line */
+        );  
         attachNodePty(ws, term);
         return;
       } catch (err: unknown) {
@@ -289,7 +289,7 @@ export default function attachPtyWebSocket(server: HttpServer): void {
         }
         console.warn(
           `[pty] node-pty failed (${msg}), falling back to Python bridge`
-        ); /* eslint-disable-line */
+        );  
       }
     } else {
       console.log('[pty] PTY_BACKEND=python, skipping node-pty'); /* eslint-disable-line */
@@ -320,7 +320,7 @@ export default function attachPtyWebSocket(server: HttpServer): void {
 
     console.log(
       `[pty] Python bridge pid=${child.pid} agent="${agentName}"`
-    ); /* eslint-disable-line */
+    );  
     attachPythonBridge(ws, child);
   });
 

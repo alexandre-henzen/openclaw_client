@@ -30,7 +30,7 @@ const list: List = async (req, res, next) => {
       )
       .getMany();
 
-    const sanitized = items.map(({ password, deletedAt, ...rest }) => rest);
+    const sanitized = items.map(({ password: _password, deletedAt: _deletedAt, ...rest }) => rest);
     return res.json({ total, items: sanitized });
   } catch (error) {
     return next(error);
@@ -42,7 +42,7 @@ const get: Get = async (req, res, next) => {
     const userRepo = AppDataSource.getRepository(User);
     const user = await userRepo.findOneBy({ _id: Number(req.params.id) });
     if (!user) return res.json(null);
-    const { password, deletedAt, ...rest } = user;
+    const { password: _password, deletedAt: _deletedAt, ...rest } = user;
     return res.json(rest);
   } catch (error) {
     return next(error);
@@ -57,7 +57,7 @@ const create: Create = async (req, res, next) => {
       createdAt: new Date(),
     });
     const saved = await userRepo.save(user);
-    const { password, deletedAt, ...rest } = saved;
+    const { password: _password, deletedAt: _deletedAt, ...rest } = saved;
     return res.json(rest);
   } catch (error) {
     return next(error);
@@ -74,7 +74,7 @@ const update: Update = async (req, res, next) => {
 
     Object.assign(user, req.body, { updatedAt: new Date() });
     const saved = await userRepo.save(user);
-    const { password, deletedAt, ...rest } = saved;
+    const { password: _password, deletedAt: _deletedAt, ...rest } = saved;
     return res.json(rest);
   } catch (error) {
     return next(error);

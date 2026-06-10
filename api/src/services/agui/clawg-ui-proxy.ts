@@ -389,7 +389,7 @@ export async function proxyToClawgUi(opts: ProxyOptions): Promise<Response> {
 
     });
 
-  } catch (err) {
+  } catch {
 
     activeAborts.delete(runId);
 

@@ -31,7 +31,7 @@ const auth: RequestHandler = async (req, res, next) => {
     req.user = user;
 
     return next();
-  } catch (e) {
+  } catch {
     return next(createError(401));
   }
 };

@@ -159,15 +159,25 @@ Não executar nesta tarefa (escopo é só especificação). Quando uma fase for 
 
 ## Verify
 
+Verification pyramid (lowest → highest confidence):
+
+1. **`harness:check`** — invariantes de domínio/segurança (`AGENTS.md` I-01..I-14); grep estrutural no client.
+2. **Lint** — higiene estática (`typescript-eslint` recommended em `api/src` e `client/src`); **não** substitui invariantes nem testes; Airbnb removido da API (ruído de estilo).
+3. **Build (`tsc`)** — tipos e compilação.
+4. **Unit + integration** — `api: npm run test` (node:test), `client: npm test` (Vitest).
+5. **Smokes G1–G17** — runtime com API up (`HARNESS_SKIP_SMOKE=1` para pular).
+6. **Playwright `@live`** — jornada real no browser (gate default em `harness:verify`).
+
+Gate composto: `npm run harness:verify` (executa a pirâmide acima; `HARNESS_E2E_MOCKED=1` ou `HARNESS_SKIP_E2E=1` para offline).
+
 ### Static checks
-- `npm run lint` em `api/` e em `client/`.
-- Typecheck: `npm run build` em `api/` (tsc é o gate) e `npm run build` em `client/` (`tsc -b && vite build`).
-- `npm run harness:check` (invariantes mecânicas do AGENTS.md).
+- `npm run lint` em `api/` (`eslint src`) e `client/`.
+- Typecheck: `npm run build` em `api/` e `client/`.
+- `npm run harness:check`.
 
 ### Unit tests
-- API: `npm run test:agui:fixtures` e `npm run test:artifacts` (em `api/`, node:test).
-- API (a criar, Fase A): testes de `security/`, `auth`, proxy.
-- Client (a criar, Fase A): `npx vitest run` em `client/`.
+- API: `npm run test` em `api/` (agui fixtures, security, auth, proxy, artifacts, observer — requer `npm run build` antes dos testes que importam `build/`).
+- Client: `npm run test` em `client/` (Vitest).
 
 ### Integration tests
 - `npm run test:artifacts:observer` (em `api/`; exige `npm run build` antes — SQLite real temporário).
@@ -202,6 +212,7 @@ Em caso de falha:
 - [x] (Fase B — 2026-06-09) Código morto do chat legado removido (`useChat`, `MessageList`, `ChatInput`, `useSendMessage`); `doc.yaml` para `copilotkit`/`agui`/`artifacts`/`runs`; G11 corrigido em `docs/HARNESS_REPORT.md`.
 - [ ] (futuro, Fase C) Migrations baseline, ownership de conversas, seed seguro, GC — cada um com ADR (requer resolução dos Unknowns #1/#3/#5).
 - [x] (Fases A/B) Verificação completa executada: `npm run harness:verify` — all gates passed (smokes G1–G17 + Playwright live G11/G18/G19). Ver `docs/HARNESS_REPORT.md` (entrada 2026-06-09 Refatoração Fases A/B).
+- [x] (2026-06-09) Lint alinhado ao harness: API migrada de Airbnb → `typescript-eslint` recommended; `harness:verify` inclui lint + `npm run test` (api + client).
 
 ## Stop Condition
 

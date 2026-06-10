@@ -44,7 +44,7 @@ const login: Login = async (req, res, next) => {
       { expiresIn: JWT_EXPIRES_IN }
     );
 
-    const { password: hashed, deletedAt, ...userData } = user;
+    const { password: _password, deletedAt: _deletedAt, ...userData } = user;
     const body = { ...(userData as UserResponse), accessToken: token };
     return res.header('access-token', token).json(body);
   } catch (error) {

@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+ 
 /**
  * Disk-based replacement for the `sessions.usage` gateway RPC.
  *
