@@ -1,0 +1,164 @@
+paths:
+  /artifacts/{id}:
+    get:
+      tags:
+        - artifacts
+      security:
+        - bearerAuth: []
+      operationId: getArtifactMeta
+      summary: Artifact metadata
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Artifact metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/artifactMeta'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          description: Artifact not found
+        500:
+          $ref: '#/components/responses/500'
+  /artifacts/{id}/frame:
+    get:
+      tags:
+        - artifacts
+      operationId: getArtifactFrame
+      summary: Sandboxed HTML frame for an artifact (iframe src)
+      description: |
+        Authenticated by the app-session token (`X-App-Session-Id` header or
+        `st` query param) scoped to the artifact's conversation. The response
+        ships a restrictive CSP; it is meant to be embedded only inside
+        `<iframe sandbox="allow-scripts allow-forms">`.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: st
+          required: false
+          schema:
+            type: string
+          description: App-session token (alternative to the X-App-Session-Id header)
+      responses:
+        200:
+          description: Self-contained HTML document with restrictive CSP headers
+          content:
+            text/html:
+              schema:
+                type: string
+        401:
+          description: Missing or invalid app-session token
+        403:
+          description: Token does not match the artifact's conversation
+  /artifacts/{id}/download:
+    get:
+      tags:
+        - artifacts
+      operationId: downloadArtifact
+      summary: Download the stored artifact payload
+      description: Authenticated by app-session token (header or `st` query param).
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: st
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Binary payload with Content-Disposition attachment
+        401:
+          description: Missing or invalid app-session token
+        404:
+          description: Artifact or stored payload not found
+        413:
+          description: Payload unavailable (no storage reference)
+  /conversation/{id}/artifacts:
+    get:
+      tags:
+        - artifacts
+      security:
+        - bearerAuth: []
+      operationId: listConversationArtifacts
+      summary: List artifacts of a conversation
+      description: Requires JWT plus an `X-App-Session-Id` token matching the conversation.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: header
+          name: X-App-Session-Id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Artifact list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/artifactMeta'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          description: Session token does not match the conversation
+        500:
+          $ref: '#/components/responses/500'
+#
+#
+#
+components:
+  ##
+  schemas:
+    #
+    artifactMeta:
+      type: object
+      required:
+        - id
+        - artifactId
+        - protocol
+      properties:
+        id:
+          type: integer
+        artifactId:
+          type: string
+        protocol:
+          type: string
+          enum: [mcp-app, html-sandbox, a2ui, markdown, file, download, unknown]
+        title:
+          type: string
+          nullable: true
+        mimeType:
+          type: string
+          nullable: true
+        conversationId:
+          type: integer
+        runId:
+          type: string
+          nullable: true
+        downloadAvailable:
+          type: boolean
+        sizeBytes:
+          type: integer
+          nullable: true

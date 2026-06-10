@@ -255,7 +255,7 @@ Invariante I-09: `check-invariants.mjs` valida `VisualArtifactHost` sandbox sem 
 - `tests/e2e/` — `login`, `pairing-mocked`, `chat-mocked`, `chat-live` + helpers
 - `data-testid`: `copilot-chat-surface`, `pairing-panel`; `aria-label="New chat"`
 - Scripts: `npm run test:e2e:mocked`, `npm run test:e2e:live` (`E2E_LIVE=1`)
-- `harness:verify` roda G11 mocked por padrão (`HARNESS_SKIP_E2E=1` para pular)
+- `harness:verify` roda **G11 live por padrão** (ADR D-008); `HARNESS_E2E_MOCKED=1` para rodar mocked, `HARNESS_SKIP_E2E=1` para pular
 - ADR **D-008** em `docs/DECISIONS.md`
 
 ### Comandos
@@ -273,10 +273,10 @@ $env:PLAYWRIGHT_SKIP_WEBSERVER="1"
 $env:E2E_LIVE="1"
 npm run test:e2e:live
 
-# Harness completo com G11
+# Harness completo com G11 (live por padrão — API + client + gateway paired)
 npm run harness:verify
-# Opcional browser real:
-$env:HARNESS_E2E_LIVE="1"; npm run harness:verify
+# Opcional G11 mocked (offline):
+$env:HARNESS_E2E_MOCKED="1"; npm run harness:verify
 ```
 
 ### Resultado runtime
@@ -323,3 +323,49 @@ Mocks de shell devem incluir `GET /agent/:id/limits` com `windows.daily|monthly|
 
 - `client/src/features/copilot/copilot-chat-layout.css` — altura 100% + scroll em `.copilotKitMessages`
 - `Layout` / `Chat` / `AgentChatPage` — cadeia flex `min-height: 0`; scroll da página desativado no chat
+
+---
+
+## 2026-06-09 — Refatoração Fases A/B (spec `docs/specs/refatoracao-inicial.spec.md`) ✅
+
+### Fase A — Rede de segurança (testes novos)
+
+- `api/tests/security/` — 18 testes unitários (`crypto` AES-GCM/HKDF/HMAC, `app-session` sign/verify, `session-scope`) — `npm run test:security`
+- `api/tests/auth/auth.integration.test.mjs` — 11 testes de caracterização (login bcrypt, validação 422, JWT middleware, blacklist no logout, escopo por sessão) com app Express real + SQLite temporário — `npm run test:auth`
+- `api/tests/agui/clawg-ui-proxy.integration.test.mjs` — 3 testes de integração com upstream HTTP real (fixture SSE): injeção de headers (inv. 3/7), filtro `run_code` (inv. 14), persistência `agui_events` (inv. 10), perfil não pareado, upstream 502 — `npm run test:agui:proxy`
+- Vitest introduzido em `client/` (`npm test`, jsdom) — 20 testes: `legacyMessagesToCopilot`, `mime-policy`/`artifact-display`, `features/auth/slice` (store real + RTK Query)
+
+### Fase B — Higiene estrutural
+
+- Código legado morto removido: `widgets/chat/{model/useChat,model/types,ui/MessageList,ui/ChatInput}`, `features/message/send/` (nenhum importador restante; build verde)
+- Swagger `doc.yaml` adicionado para `copilotkit`, `agui`, `artifacts`, `runs`
+- Divergência G11 mocked/live corrigida neste relatório (live é o padrão do `harness:verify`)
+- `.gitignore`: `copilotkit/` ancorado na raiz (`/copilotkit/`) para não ignorar `api/src/routes/copilotkit/`
+
+### Bugs reais encontrados e corrigidos pelos testes
+
+| Bug | Causa | Correção |
+|-----|-------|----------|
+| `RUN_FINISHED` final descartado quando upstream fecha sem blank line | `parseAguiStream` não dava flush no fim do stream (run ficava `aborted`) | flush `\n\n` em `event-parser.ts` (mesma semântica de `parseAguiText`) |
+| Página de chat em branco (tela morta, sem error boundary) | `legacyMessagesToCopilot(data.items)` com `items === undefined` → `TypeError` desmonta a árvore CopilotKit | função tolera `null/undefined` + teste unitário e e2e mocked verde |
+
+### Comandos executados (todos verdes)
+
+```powershell
+npm run harness:check                      # invariantes I-01..I-14
+cd api; npm run build                      # tsc
+npm run test:agui:fixtures                 # 1/1
+npm run test:security                      # 18/18
+npm run test:auth                          # 11/11
+npm run test:agui:proxy                    # 3/3
+npm run test:artifacts                     # 5/5
+npm run test:artifacts:observer            # 3/3
+npm run test:harness:smoke                 # G1–G12 11/11 (stack real)
+npm run test:harness:artifacts             # G13–G17 5/5 (stack real)
+cd client; npm run build; npm run lint; npm test   # 20/20
+cd ..; npm run test:e2e:mocked             # 4/4
+npm run test:e2e:live                      # 4/4 (login, chat live, artefatos, pizza via LLM real)
+npm run harness:verify                     # composito — all gates passed
+```
+
+Lint da API permanece com 169 erros pré-existentes (Airbnb estrito; contagem idêntica ao baseline antes desta sessão — nenhum erro novo introduzido). Lint do client zerado (2 erros pré-existentes corrigidos).

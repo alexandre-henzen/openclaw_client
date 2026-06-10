@@ -38,6 +38,9 @@ export default function Chat({ agentId, conversationId }: ChatProps) {
   }, [checkPairing]);
 
   useEffect(() => {
+    // setPaired only fires after the awaited pairing check resolves (external
+    // system sync), never synchronously inside the effect body.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (paired === null) verifyPairing();
   }, [paired, verifyPairing]);
 

@@ -198,10 +198,10 @@ Em caso de falha:
 - [x] Identificar specs faltantes, testes faltantes e áreas de risco (seções acima).
 - [x] Detectar stack e definir estratégia de testes (node:test na API, Vitest a introduzir no client, Playwright live para e2e).
 - [x] Criar/atualizar esta spec e `tasks/refatoracao-inicial.cursor-task.md`.
-- [ ] (futuro, Fase A) Testes de caracterização: security, auth, proxy, client units.
-- [ ] (futuro, Fase B) Limpeza de código morto do chat legado + docs.
-- [ ] (futuro, Fase C) Migrations baseline, ownership de conversas, seed seguro, GC — cada um com ADR.
-- [ ] (futuro) Rodar verificação completa (`npm run harness:verify`) após cada fase.
+- [x] (Fase A — 2026-06-09) Testes de caracterização: security (18), auth (11), proxy (3), client units (Vitest, 20). Bugs reais corrigidos: flush do `RUN_FINISHED` em `parseAguiStream`; crash de página em branco em `legacyMessagesToCopilot(undefined)`.
+- [x] (Fase B — 2026-06-09) Código morto do chat legado removido (`useChat`, `MessageList`, `ChatInput`, `useSendMessage`); `doc.yaml` para `copilotkit`/`agui`/`artifacts`/`runs`; G11 corrigido em `docs/HARNESS_REPORT.md`.
+- [ ] (futuro, Fase C) Migrations baseline, ownership de conversas, seed seguro, GC — cada um com ADR (requer resolução dos Unknowns #1/#3/#5).
+- [x] (Fases A/B) Verificação completa executada: `npm run harness:verify` — all gates passed (smokes G1–G17 + Playwright live G11/G18/G19). Ver `docs/HARNESS_REPORT.md` (entrada 2026-06-09 Refatoração Fases A/B).
 
 ## Stop Condition
 

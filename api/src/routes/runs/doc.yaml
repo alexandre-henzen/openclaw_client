@@ -1,0 +1,31 @@
+paths:
+  /runs/{runId}:
+    delete:
+      tags:
+        - runs
+      security:
+        - bearerAuth: []
+      operationId: abortRun
+      summary: Abort an in-flight AG-UI run
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Abort result (`aborted` is false when the run is unknown or already finished)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - aborted
+                properties:
+                  aborted:
+                    type: boolean
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'

@@ -43,6 +43,7 @@ async function copyTextToClipboard(text: string): Promise<boolean> {
 type PreProps = HTMLAttributes<HTMLPreElement> & { node?: unknown };
 
 function CodeBlockWithCopy({ children, node: _node, ...preProps }: PreProps) {
+  void _node; // react-markdown injects `node`; keep it out of {...preProps}
   const preRef = useRef<HTMLPreElement>(null);
   const [copied, setCopied] = useState(false);
 

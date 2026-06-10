@@ -1,0 +1,34 @@
+paths:
+  /copilotkit:
+    post:
+      tags:
+        - copilotkit
+      security:
+        - bearerAuth: []
+      operationId: copilotRuntime
+      summary: CopilotKit runtime endpoint (GraphQL-over-HTTP used by the CopilotKit client)
+      description: |
+        Entry point for the CopilotKit React client. The runtime forwards agent
+        runs to the internal AG-UI proxy (`POST /agui`) via HttpAgent, passing
+        through the `X-App-Session-Id` header. Never call clawg-ui directly.
+      parameters:
+        - in: header
+          name: X-App-Session-Id
+          required: true
+          schema:
+            type: string
+          description: HMAC app-session token minted by `GET /conversation/{id}/session-token`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: CopilotKit runtime payload (opaque to this API)
+      responses:
+        200:
+          description: Runtime response (JSON or text/event-stream while a run is active)
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'

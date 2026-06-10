@@ -13,4 +13,5 @@ playwright-report/
 test-results/
 
 # Referência técnica CopilotKit (checkout local, não versionar)
-copilotkit/
+# Ancorado na raiz para não ignorar api/src/routes/copilotkit/
+/copilotkit/

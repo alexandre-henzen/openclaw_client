@@ -1,0 +1,43 @@
+paths:
+  /agui:
+    post:
+      tags:
+        - agui
+      operationId: aguiProxy
+      summary: AG-UI proxy to clawg-ui (SSE)
+      description: |
+        Internal proxy used by the CopilotKit runtime. Authenticated only by
+        the HMAC `X-App-Session-Id` header (no JWT). The backend injects
+        `Authorization` (decrypted device token), `X-OpenClaw-Agent-Id` and
+        `X-OpenClaw-Session-Key` towards clawg-ui; the browser never supplies
+        them. Client-registered `run_code` tools are filtered. All AG-UI
+        events are persisted in `agui_events`.
+      parameters:
+        - in: header
+          name: X-App-Session-Id
+          required: true
+          schema:
+            type: string
+          description: '`<conversationId>.<hmac>` token from `GET /conversation/{id}/session-token`'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: AG-UI RunAgentInput (threadId/runId are pinned server-side)
+      responses:
+        200:
+          description: AG-UI event stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        401:
+          description: Missing or invalid app-session token
+        404:
+          description: Gateway profile or conversation not found
+        412:
+          description: Gateway not paired (run pairing first)
+        502:
+          description: clawg-ui upstream unreachable or returned an error

@@ -82,6 +82,9 @@ export async function* parseAguiStream(
         if (rDone) break;
         parser.feed(decoder.decode(value, { stream: true }));
       }
+      // Flush a trailing event when the upstream closes without a final
+      // blank line (same end-of-input semantics as parseAguiText).
+      parser.feed('\n\n');
     } finally {
       done = true;
       if (resolveNext) {
