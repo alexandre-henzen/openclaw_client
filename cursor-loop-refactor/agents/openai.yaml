@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cursor Loop Refactor"
+  short_description: "Reverse-engineer specs, refactor safely, and enforce real verification in Cursor."
+  icon: "🔁"

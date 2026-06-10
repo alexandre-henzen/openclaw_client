@@ -1,0 +1,46 @@
+---
+description: loop engineering rules for reverse engineering, refactoring, testing, and deploy readiness
+alwaysApply: true
+---
+
+# Loop Engineering Rules
+
+Always use this loop before claiming completion:
+
+1. Goal
+2. Context
+3. Discover
+4. Plan
+5. Execute
+6. Verify
+7. Iterate
+8. Actions
+9. Stop Condition
+10. Verified Output
+
+## Required behavior
+
+- Discover relevant files, commands, tests, configs, routes, schemas, and dependencies before editing.
+- Prefer reverse-engineered specs in `docs/specs/` and executable tasks in `tasks/`.
+- Create missing specs when they do not exist.
+- Create missing tests when they do not exist.
+- Add characterization tests before refactoring uncertain legacy behavior.
+- Keep changes small and verifiable.
+- Do not say the work is complete only because files changed.
+
+## Testing requirements
+
+- Use unit tests for isolated logic.
+- Use integration tests for real boundaries: database, API, filesystem, queue, service wiring, auth, or external adapters.
+- Use Playwright for all e2e web user journeys.
+- The final Playwright readiness test must run against the real application as a user would, without mocks.
+- Mocks are allowed for narrow unit tests only, not for final integration/e2e readiness.
+
+## Completion rule
+
+Only mark the task complete after providing Verified Output:
+
+- Commands executed
+- Results
+- Evidence such as logs, screenshots, traces, videos, or reports when relevant
+- Remaining risks or unknowns
