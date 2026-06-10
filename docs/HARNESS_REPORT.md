@@ -340,7 +340,7 @@ Mocks de shell devem incluir `GET /agent/:id/limits` com `windows.daily|monthly|
 - Código legado morto removido: `widgets/chat/{model/useChat,model/types,ui/MessageList,ui/ChatInput}`, `features/message/send/` (nenhum importador restante; build verde)
 - Swagger `doc.yaml` adicionado para `copilotkit`, `agui`, `artifacts`, `runs`
 - Divergência G11 mocked/live corrigida neste relatório (live é o padrão do `harness:verify`)
-- `.gitignore`: `copilotkit/` ancorado na raiz (`/copilotkit/`) para não ignorar `api/src/routes/copilotkit/`
+- Stack gateway self-contained (D-013): `docker-compose.yml` + `.env.example` na raiz; sem checkout `copilotkit/`
 
 ### Bugs reais encontrados e corrigidos pelos testes
 
@@ -390,3 +390,54 @@ cd api; npm run build; npm run test
 cd client; npm test
 $env:HARNESS_SKIP_SMOKE="1"; $env:HARNESS_SKIP_E2E="1"; npm run harness:verify
 ```
+
+---
+
+## 2026-06-09 — Fase C — dados e bootstrap ✅
+
+Decisões do operador registradas em **D-009..D-012** (`docs/DECISIONS.md`).
+
+### Mudanças
+
+- **D-009:** single-user por instância — sem filtro `createdBy` em conversas.
+- **D-010:** baseline migration `1780512000000-BaselineSchema`; `synchronize: false`; `migrationsRun: true`.
+- **D-011:** `DATA_RETENTION_DAYS` (default 7) + GC de `agui_events`, `visual_artifacts` e arquivos órfãos.
+- **D-012:** seed admin via `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` no `.env` (removido hardcode).
+
+### Verificação
+
+```powershell
+cd api; npm run build; npm run test   # 50 testes (incl. config + phase-c)
+cd api; npm run migration:run         # aplica baseline em DB vazio
+```
+
+---
+
+## 2026-06-10 — Stack gateway self-contained (D-013) ✅
+
+### Mudanças
+
+- Artefatos do stack copiados para o repo: `scripts/install-*.sh`, `pairing-approve-server.mjs`, `plugins/`, `services/korp-mcp-gateway/`, `.env.example`.
+- `docker-compose.yml` na raiz (sem serviço `openclaw-chat` de referência Next.js).
+- `openclaw-stack.mjs` + `sync-copilot-env.mjs` usam `.env` na raiz — removida dependência de `copilotkit/`.
+- Documentação atualizada (`AGENTS.md`, SPEC-001, ARTIFACTS, README).
+
+### Verificação
+
+```powershell
+docker compose -f docker-compose.yml --env-file .env.example config --quiet
+$env:HARNESS_SKIP_SMOKE="1"; $env:HARNESS_SKIP_E2E="1"; npm run harness:verify
+```
+
+### Verificação live (2026-06-10)
+
+Stack real: gateway Docker (`npm run openclaw:ensure`), API `:18802`, client `:18800`, `.env` raiz copiado de instalação OpenClaw existente.
+
+Pré-requisito E2E: `PLAYWRIGHT_BROWSERS_PATH=0 npm run playwright:install` (Chromium local em `node_modules`).
+
+```powershell
+$env:PLAYWRIGHT_BROWSERS_PATH="0"
+npm run harness:verify
+```
+
+Resultado: **todos os gates** — check, lint, build, 50 testes API + 20 client, smoke G1–G17, Playwright `@live` 4/4 (G11/G18/G19 + login).

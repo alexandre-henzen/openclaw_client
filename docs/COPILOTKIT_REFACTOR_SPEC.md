@@ -6,7 +6,7 @@
 | **Versão** | `0.1.0` |
 | **Data** | 2026-06-08 |
 | **Escopo** | `openclaw-client` (client + api) |
-| **Referência técnica** | `copilotkit/openclaw-copilotkit-official-chat/` |
+| **Referência técnica** | Implementação em `api/src/` + `client/src/features/copilot/` (sem checkout externo) |
 | **Pré-requisito** | Plugin `clawg-ui` instalado no OpenClaw local |
 | **Padrão** | Harness Engineering (spec como artefato primário; código como saída verificável) |
 
@@ -37,7 +37,7 @@ O backend Express permanece como **único ponto de confiança**: injeta credenci
 
 ### 2.2 Referência (TO-BE validada)
 
-O subdiretório `copilotkit/openclaw-copilotkit-official-chat/` já implementa o padrão alvo:
+O padrão alvo (CopilotRuntime → HttpAgent → clawg-ui) está implementado neste monorepo:
 
 ```
 Browser ──► /api/copilotkit (CopilotRuntime)
@@ -211,7 +211,7 @@ POST /api/openclaw/pairing/check
 POST /api/openclaw/pairing/approve
 ```
 
-Portar de `copilotkit/.../src/app/api/openclaw/pairing/`.
+Portar de `api/src/routes/openclaw/pairing/` (implementado).
 
 ### 6.4 Artifacts
 
@@ -271,7 +271,7 @@ DELETE /api/runs/:runId
 | `visual_artifacts` | Metadata de artifacts (`protocol`, `storage_ref`, `content_hash`) |
 | `runs` | Estado de execução (`started`, `finished`, `aborted`, `error`) |
 
-Schemas detalhados: copiar de `copilotkit/.../src/lib/db/schema.ts` (referência).
+Schemas detalhados: ver entidades TypeORM em `api/src/entities/`.
 
 ### 7.3 Migração de dados
 
@@ -555,13 +555,12 @@ Cada fase termina com **gate verificável** antes da próxima. Atualizar `docs/H
 
 | Documento | Caminho |
 |-----------|---------|
-| Referência CopilotKit + clawg-ui | `copilotkit/openclaw-copilotkit-official-chat/` |
-| Constituição (referência) | `copilotkit/openclaw-copilotkit-official-chat/AGENTS.md` |
-| API (referência) | `copilotkit/openclaw-copilotkit-official-chat/docs/API.md` |
-| Segurança (referência) | `copilotkit/openclaw-copilotkit-official-chat/docs/SECURITY.md` |
-| Chat atual | `client/src/widgets/chat/` |
+| Stack gateway Docker | `docker-compose.yml` + `.env.example` |
+| Pairing / AG-UI proxy | `api/src/routes/openclaw/`, `api/src/services/agui/` |
+| Segurança app-session | `api/src/services/security/` |
+| Chat atual | `client/src/features/copilot/` |
 | SSE legado | `api/src/routes/message/controller.ts` → `ocService.runChat` |
-| Plugin run_code | `copilotkit/plugins/openclaw-run-code-sandbox/` |
+| Plugin run_code | `plugins/openclaw-run-code-sandbox/` |
 
 ---
 

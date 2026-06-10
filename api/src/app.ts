@@ -17,6 +17,7 @@ import { ensureDevicePaired, gateway } from './services/openclawGateway';
 import { bootstrapCopilot } from './services/bootstrap';
 import attachPtyWebSocket from './services/ptyService';
 import { startUpdateChecker } from './services/updateService';
+import { startDataRetentionScheduler } from './services/data-retention';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ const PORT = Number(process.env.PORT) || 18802;
     await AppDataSource.initialize();
     console.log(colors.green('SQLite database connected'));
     await seedAdminUser();
+    startDataRetentionScheduler();
     await bootstrapCopilot();
     await ensureDevicePaired();
     const gwOk = await gateway.ensureConnected();

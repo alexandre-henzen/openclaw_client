@@ -21,11 +21,11 @@ function prefix(stream, tag) {
   });
 }
 
-// 1. Sync gateway env from copilotkit/.env → api/.env, then setup
+// 1. Sync gateway env from root .env → api/.env, then setup
 run('node', [path.join(ROOT, 'scripts', 'sync-copilot-env.mjs')]);
 run('node', [path.join(ROOT, 'scripts', 'setup.js')]);
 
-// 2. OpenClaw gateway + clawg-ui (copilotkit/docker-compose.yml)
+// 2. OpenClaw gateway + clawg-ui (docker-compose.yml na raiz)
 run('node', [path.join(ROOT, 'scripts', 'openclaw-stack.mjs'), 'ensure']);
 
 // 3. Install dependencies if needed
@@ -46,8 +46,8 @@ console.log();
 console.log('  🔧 Starting in development mode...');
 console.log(`  🌐 Client: http://localhost:${clientPort}`);
 console.log(`  🧩 API:    http://localhost:${apiPort}`);
-console.log('  🦞 Gateway: http://127.0.0.1:18789 (copilotkit/docker-compose.yml)');
-console.log('  ⚙️  Ports: ~/.openclaw_client/.env | Gateway: copilotkit/.env');
+console.log('  🦞 Gateway: http://127.0.0.1:18789 (docker-compose.yml)');
+console.log('  ⚙️  Ports: ~/.openclaw_client/.env | Gateway: .env (raiz)');
 console.log();
 
 const spawnDev = (cwd) =>

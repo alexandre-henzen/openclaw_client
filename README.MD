@@ -63,10 +63,12 @@ npm start
 
 ## Default Login
 
-On first startup, a default admin user is created:
+On first startup, if no active user exists, an admin is created from `api/.env` (or `~/.openclaw_client/.env` after install):
 
-- **Email:** `admin@admin.com`
-- **Password:** `123456`
+- **Email:** `SEED_ADMIN_EMAIL` (default in `.env.example`: `admin@admin.com`)
+- **Password:** `SEED_ADMIN_PASSWORD` (default in `.env.example`: `123456`)
+
+Copy `api/.env.example` to `api/.env` and adjust before first run in production.
 
 ## Service Commands
 
@@ -90,7 +92,17 @@ To rebuild after code changes, run **`npm start`** from the repo again.
 | `npm start`     | Build, deploy to `~/.openclaw_client`, LaunchAgent, global CLI |
 | `npm run stop`  | Stop servers                                                   |
 | `npm run dev`   | API (nodemon) + Client (Vite) in dev mode with hot reload      |
-| `npm run setup` | Generate `api/.env` only                                       |
+| `npm run openclaw:up` | Start OpenClaw gateway + clawg-ui (Docker, `docker-compose.yml`) |
+| `npm run openclaw:status` | Gateway stack status |
+| `npm run sync:env` | Copy gateway vars from root `.env` → `api/.env` |
+
+## OpenClaw Gateway (Docker)
+
+CopilotKit chat requires the OpenClaw gateway with clawg-ui. Stack files live in this repo:
+
+1. Copy `.env.example` → `.env` at the repo root and fill in secrets (`OPENCLAW_GATEWAY_TOKEN`, API keys).
+2. Run `npm run openclaw:up` (or `npm run dev`, which calls `openclaw:ensure`).
+3. Run `npm run sync:env` to propagate gateway URLs into `api/.env`.
 
 ## Configuration
 

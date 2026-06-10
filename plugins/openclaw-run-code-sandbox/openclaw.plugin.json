@@ -1,0 +1,91 @@
+{
+  "id": "openclaw-run-code-sandbox",
+  "name": "Run Code Sandbox",
+  "description": "Execute generated python/node/bash in an isolated sandbox (run_code tool).",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "required": [
+      "SANDBOX_BACKEND",
+      "PISTON_URL",
+      "PISTON_RUN_TIMEOUT_MS",
+      "E2B_API_KEY",
+      "E2B_TEMPLATE",
+      "E2B_SANDBOX_TIMEOUT_MS",
+      "SANDBOX_NETWORK",
+      "SANDBOX_ALLOW_NETWORK"
+    ],
+    "properties": {
+      "SANDBOX_BACKEND": {
+        "anyOf": [
+          {
+            "type": "string",
+            "const": "piston"
+          },
+          {
+            "type": "string",
+            "const": "e2b"
+          },
+          {
+            "type": "string",
+            "const": "docker"
+          },
+          {
+            "type": "string",
+            "const": "daytona-oss"
+          }
+        ],
+        "default": "piston"
+      },
+      "PISTON_URL": {
+        "type": "string",
+        "default": "http://piston:2000/api/v2"
+      },
+      "PISTON_RUN_TIMEOUT_MS": {
+        "type": "integer",
+        "minimum": 1000,
+        "maximum": 60000,
+        "default": 30000
+      },
+      "E2B_API_KEY": {
+        "type": "string",
+        "default": ""
+      },
+      "E2B_TEMPLATE": {
+        "type": "string",
+        "default": ""
+      },
+      "E2B_SANDBOX_TIMEOUT_MS": {
+        "type": "integer",
+        "minimum": 1000,
+        "maximum": 3600000,
+        "default": 300000
+      },
+      "SANDBOX_NETWORK": {
+        "anyOf": [
+          {
+            "type": "string",
+            "const": "none"
+          },
+          {
+            "type": "string",
+            "const": "egress"
+          }
+        ],
+        "default": "none"
+      },
+      "SANDBOX_ALLOW_NETWORK": {
+        "type": "boolean",
+        "default": false
+      }
+    }
+  },
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "tools": [
+      "run_code"
+    ]
+  }
+}

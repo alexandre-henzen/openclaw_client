@@ -1,0 +1,213 @@
+services:
+  # Self-hosted code sandbox for the run_code gateway plugin (RUN_CODE_TOOL_SPEC §5).
+  # Skipped when SANDBOX_BACKEND=e2b only if you use compose profiles; by default
+  # piston stays up so the documented default backend works out of the box.
+  piston:
+    image: ghcr.io/engineer-man/piston:latest@sha256:2f66b7456189c4d713aa986d98eccd0b6ee16d26c7ec5f21b30e942756fd127a
+    pull_policy: always
+    restart: unless-stopped
+    # Required: isolate needs direct cgroups/namespaces (no rootless upstream support).
+    privileged: true
+    environment:
+      PISTON_LOG_LEVEL: INFO
+      PISTON_BIND_ADDRESS: 0.0.0.0:2000
+      PISTON_RUN_TIMEOUT: 60000
+      PISTON_COMPILE_TIMEOUT: 60000
+      PISTON_OUTPUT_MAX_SIZE: 1048576
+      PISTON_MAX_FILE_SIZE: 1048576
+      PISTON_DISABLE_NETWORKING: "true"
+    volumes:
+      - piston-packages:/piston/packages
+    tmpfs:
+      - /piston/jobs:exec,uid=1000,gid=1000,mode=711
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          node -e "require('http').get('http://127.0.0.1:2000/api/v2/runtimes',
+          r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 15s
+
+  piston-packages-setup:
+    image: curlimages/curl:8.10.1
+    pull_policy: always
+    depends_on:
+      piston:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: ["sh", "/usr/local/bin/install-piston-packages.sh"]
+    environment:
+      PISTON_URL: http://piston:2000/api/v2
+    volumes:
+      - ./scripts/install-piston-packages.sh:/usr/local/bin/install-piston-packages.sh:ro
+
+  # Idempotent installer for the @contextableai/clawg-ui plugin. Runs once
+  # before the gateway so the plugin is present on first boot. The plugin
+  # lives under the bind-mounted ~/.openclaw/npm, so the install survives
+  # container recreate.
+  openclaw-clawg-ui-setup:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    pull_policy: always
+    entrypoint: ["sh", "/usr/local/bin/install-clawg-ui-plugin.sh"]
+    restart: "no"
+    environment:
+      XDG_CONFIG_HOME: /home/node/.openclaw
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-${HOME}/.openclaw}:/home/node/.openclaw
+      - ./scripts/install-clawg-ui-plugin.sh:/usr/local/bin/install-clawg-ui-plugin.sh:ro
+
+  openclaw-run-code-sandbox-setup:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    pull_policy: always
+    entrypoint: ["sh", "/usr/local/bin/install-run-code-sandbox-plugin.sh"]
+    restart: "no"
+    environment:
+      XDG_CONFIG_HOME: /home/node/.openclaw
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-${HOME}/.openclaw}:/home/node/.openclaw
+      - ./scripts/install-run-code-sandbox-plugin.sh:/usr/local/bin/install-run-code-sandbox-plugin.sh:ro
+      - ./plugins/openclaw-run-code-sandbox:/srv/plugin:ro
+
+  # Skill ERP Korp + sandbox (workspace/skills/openclaw-sandbox/SKILL.md).
+  openclaw-sandbox-skill-setup:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    pull_policy: always
+    restart: "no"
+    environment:
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+    volumes:
+      - ${OPENCLAW_WORKSPACE_DIR:-${HOME}/.openclaw/workspace}:/home/node/.openclaw/workspace
+      - ./plugins/openclaw-sandbox-skill:/srv/skill:ro
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -eu
+        DEST="/home/node/.openclaw/workspace/skills/openclaw-sandbox"
+        test -f /srv/skill/SKILL.md
+        mkdir -p "$${DEST%/*}"
+        rm -rf "$$DEST"
+        mkdir -p "$$DEST"
+        cp /srv/skill/SKILL.md "$$DEST/SKILL.md"
+        [ -f /srv/skill/AGENTS_PATCH.md ] && cp /srv/skill/AGENTS_PATCH.md "$$DEST/AGENTS_PATCH.md" || true
+        echo "[skill-installer] ok -> $$DEST"
+
+  # Gateway OAuth + proxy MCP Korp (TypeScript). Injeta Bearer em cada request;
+  # openclaw.json aponta para http://korp-mcp-gateway:8787/mcp sem token no arquivo.
+  korp-mcp-gateway:
+    build:
+      context: ./services/korp-mcp-gateway
+      dockerfile: Dockerfile
+    pull_policy: build
+    restart: unless-stopped
+    environment:
+      KORP_OAUTH_CLIENT_ID: ${KORP_OAUTH_CLIENT_ID:-}
+      KORP_OAUTH_CLIENT_SECRET: ${KORP_OAUTH_CLIENT_SECRET:-}
+      KORP_OAUTH_TOKEN_URL: ${KORP_OAUTH_TOKEN_URL:-https://gateway.korp.com.br/oauth/connect/token}
+      KORP_OAUTH_SCOPE: ${KORP_OAUTH_SCOPE:-mcp:datawarehouse-elt mcp:datawarehouse-projetos}
+      KORP_MCP_UPSTREAM_URL: ${KORP_MCP_URL:-https://api.korp.com.br/bi/v1/mcp}
+      KORP_MCP_PROXY_URL: http://korp-mcp-gateway:8787
+      KORP_MCP_GATEWAY_PORT: 8787
+      KORP_TOKEN_REFRESH_SKEW_MS: ${KORP_TOKEN_REFRESH_SKEW_MS:-120000}
+      KORP_TOKEN_REFRESH_INTERVAL_MS: ${KORP_TOKEN_REFRESH_INTERVAL_MS:-60000}
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-${HOME}/.openclaw}:/home/node/.openclaw
+    extra_hosts:
+      - "gateway.korp.com.br:164.152.44.244"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1:8787/ready >/dev/null || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+  openclaw-gateway:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      korp-mcp-gateway:
+        condition: service_healthy
+      openclaw-clawg-ui-setup:
+        condition: service_completed_successfully
+      openclaw-run-code-sandbox-setup:
+        condition: service_completed_successfully
+      openclaw-sandbox-skill-setup:
+        condition: service_completed_successfully
+      piston-packages-setup:
+        condition: service_completed_successfully
+    ports:
+      - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
+    environment:
+      OPENCLAW_GATEWAY_MODE: ${OPENCLAW_GATEWAY_MODE:-local}
+      OPENCLAW_GATEWAY_BIND: ${OPENCLAW_GATEWAY_BIND:-lan}
+      OPENCLAW_GATEWAY_PORT: 18789
+      OPENCLAW_DISABLE_BONJOUR: ${OPENCLAW_DISABLE_BONJOUR:-1}
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      OPENAI_API_KEY: ${OPENROUTER_API_KEY:-${OPENAI_API_KEY:-}}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENCLAW_DEFAULT_MODEL: ${OPENCLAW_DEFAULT_MODEL:-}
+      SANDBOX_BACKEND: ${SANDBOX_BACKEND:-piston}
+      PISTON_URL: ${PISTON_URL:-http://piston:2000/api/v2}
+      PISTON_RUN_TIMEOUT_MS: ${PISTON_RUN_TIMEOUT_MS:-30000}
+      E2B_API_KEY: ${E2B_API_KEY:-}
+      E2B_TEMPLATE: ${E2B_TEMPLATE:-}
+      E2B_SANDBOX_TIMEOUT_MS: ${E2B_SANDBOX_TIMEOUT_MS:-300000}
+      SANDBOX_NETWORK: ${SANDBOX_NETWORK:-none}
+      SANDBOX_ALLOW_NETWORK: ${SANDBOX_ALLOW_NETWORK:-0}
+      XDG_CONFIG_HOME: /home/node/.openclaw
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-${HOME}/.openclaw}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-${HOME}/.openclaw/workspace}:/home/node/.openclaw/workspace
+      - ${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME}/.openclaw-auth-profile-secrets}:/home/node/.config/openclaw
+      - ./scripts/install-clawg-ui-plugin.sh:/usr/local/bin/install-clawg-ui-plugin.sh:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      # OAuth token endpoint (DNS local pode falhar no Docker).
+      - "gateway.korp.com.br:164.152.44.244"
+
+  openclaw-cli:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    pull_policy: always
+    network_mode: service:openclaw-gateway
+    depends_on:
+      - openclaw-gateway
+    entrypoint: ["node", "dist/index.js"]
+    command: ["--help"]
+    environment:
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      OPENAI_API_KEY: ${OPENROUTER_API_KEY:-${OPENAI_API_KEY:-}}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENCLAW_DEFAULT_MODEL: ${OPENCLAW_DEFAULT_MODEL:-}
+      XDG_CONFIG_HOME: /home/node/.openclaw
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-${HOME}/.openclaw}:/home/node/.openclaw
+
+  # Aprova pairing clawg-ui via CLI (volume ~/.openclaw compartilhado com o gateway).
+  openclaw-pairing-helper:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      openclaw-gateway:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18790:18790"
+    environment:
+      PAIRING_HELPER_PORT: 18790
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      XDG_CONFIG_HOME: /home/node/.openclaw
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-${HOME}/.openclaw}:/home/node/.openclaw
+      - ./scripts/pairing-approve-server.mjs:/usr/local/bin/pairing-approve-server.mjs:ro
+    entrypoint: ["node", "/usr/local/bin/pairing-approve-server.mjs"]
+
+volumes:
+  piston-packages:

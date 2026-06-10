@@ -5,7 +5,7 @@
   "main": "app.ts",
   "scripts": {
     "lint": "eslint src",
-    "test": "npm run test:agui:fixtures && npm run test:security && npm run test:auth && npm run test:agui:proxy && npm run test:artifacts && npm run test:artifacts:observer",
+    "test": "npm run test:agui:fixtures && npm run test:security && npm run test:auth && npm run test:agui:proxy && npm run test:artifacts && npm run test:artifacts:observer && npm run test:config && npm run test:phase-c",
     "dev": "nodemon --ext yaml,js,json,ts,*.d.ts --exec \"ts-node ./src/app.ts\"",
     "build": "tsc --build",
     "start": "node build/src/app.js",
@@ -15,6 +15,9 @@
     "test:auth": "node --test tests/auth/auth.integration.test.mjs",
     "test:artifacts": "node --test tests/artifacts/mime-policy.test.mjs tests/artifacts/sanitize-media-text.test.mjs",
     "test:artifacts:observer": "node --test tests/artifacts/run-code-observer.integration.test.mjs",
+    "test:config": "node --test tests/config/seed-admin.test.mjs tests/config/retention.test.mjs",
+    "test:phase-c": "node --test tests/phase-c/phase-c.integration.test.mjs",
+    "migration:run": "npm run build && node ./build/src/run-migrations.js",
     "test:harness:smoke": "node --test tests/harness/smoke-copilot.mjs",
     "test:harness:artifacts": "node --test tests/harness/smoke-artifacts.mjs"
   },

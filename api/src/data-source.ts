@@ -14,6 +14,7 @@ import {
   VisualArtifact,
   CopilotRun,
 } from './entities';
+import { BaselineSchema1780512000000 } from './migrations/1780512000000-BaselineSchema';
 
 dotenv.config();
 
@@ -26,7 +27,9 @@ if (!fs.existsSync(dbDir)) {
 const AppDataSource = new DataSource({
   type: 'better-sqlite3',
   database: dbPath,
-  synchronize: true,
+  synchronize: false,
+  migrationsRun: true,
+  migrations: [BaselineSchema1780512000000],
   entities: [
     User,
     Agent,

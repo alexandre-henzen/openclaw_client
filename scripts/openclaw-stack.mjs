@@ -1,6 +1,5 @@
 /**
- * Sobe o stack OpenClaw + clawg-ui via copilotkit/docker-compose.yml
- * (mesmo layout da referência em copilotkit/.env).
+ * Sobe o stack OpenClaw + clawg-ui via docker-compose.yml na raiz do repositório.
  */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -9,9 +8,9 @@ import { fileURLToPath } from 'node:url';
 import { syncCopilotEnv } from './sync-copilot-env.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const COPILOTKIT = path.join(ROOT, 'copilotkit');
-const COMPOSE = path.join(COPILOTKIT, 'docker-compose.yml');
-const ENV_FILE = path.join(COPILOTKIT, '.env');
+const COMPOSE = path.join(ROOT, 'docker-compose.yml');
+const ENV_FILE = path.join(ROOT, '.env');
+const ENV_EXAMPLE = path.join(ROOT, '.env.example');
 const PROJECT = 'openclaw';
 
 const GATEWAY_SERVICES = [
@@ -25,9 +24,9 @@ const GATEWAY_SERVICES = [
   'openclaw-pairing-helper',
 ];
 
-function docker(args, { inherit = false } = {}) {
+function docker(args, { inherit = false, cwd = ROOT } = {}) {
   return spawnSync('docker', args, {
-    cwd: COPILOTKIT,
+    cwd,
     stdio: inherit ? 'inherit' : 'pipe',
     encoding: 'utf8',
   });
@@ -38,7 +37,9 @@ function compose(args, { inherit = false } = {}) {
     throw new Error(`docker-compose não encontrado: ${COMPOSE}`);
   }
   if (!fs.existsSync(ENV_FILE)) {
-    throw new Error(`copilotkit/.env não encontrado — copie de copilotkit/.env.example`);
+    throw new Error(
+      `.env na raiz não encontrado — copie de ${path.basename(ENV_EXAMPLE)} e preencha os segredos`
+    );
   }
   const base = ['compose', '-f', COMPOSE, '--env-file', ENV_FILE, '-p', PROJECT];
   return docker([...base, ...args], { inherit });
@@ -77,7 +78,7 @@ export function isGatewayHealthy() {
 
 export function cmdUp({ exitOnFail = true } = {}) {
   syncCopilotEnv({ quiet: true });
-  console.log('🦞 Subindo OpenClaw gateway + clawg-ui (copilotkit/docker-compose.yml)...');
+  console.log('🦞 Subindo OpenClaw gateway + clawg-ui (docker-compose.yml)...');
   const r = compose(['up', '-d', ...GATEWAY_SERVICES], { inherit: true });
   if (r.status !== 0) {
     if (exitOnFail) process.exit(r.status ?? 1);
@@ -97,7 +98,7 @@ export function cmdUp({ exitOnFail = true } = {}) {
 function cmdEnsure() {
   syncCopilotEnv({ quiet: true });
   if (gatewayHealthy()) {
-    console.log('✅ OpenClaw gateway já está healthy (copilotkit/)');
+    console.log('✅ OpenClaw gateway já está healthy');
     return;
   }
   cmdUp({ exitOnFail: false });

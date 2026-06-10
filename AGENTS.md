@@ -1,8 +1,7 @@
 # AGENTS.md — constituição do projeto
 
 Este arquivo é a fonte de verdade para IAs e desenvolvedores que trabalham neste
-repositório. Invariantes abaixo derivam de `docs/COPILOTKIT_REFACTOR_SPEC.md` e da
-referência `copilotkit/openclaw-copilotkit-official-chat/AGENTS.md`.
+repositório. Invariantes abaixo derivam de `docs/COPILOTKIT_REFACTOR_SPEC.md`.
 
 ## Invariantes (não negociáveis)
 
@@ -53,4 +52,4 @@ api/src/
 | Spec completa | `docs/COPILOTKIT_REFACTOR_SPEC.md` |
 | ADRs | `docs/DECISIONS.md` |
 | Relatório de fases | `docs/HARNESS_REPORT.md` |
-| Referência técnica | `copilotkit/openclaw-copilotkit-official-chat/` |
+| Stack gateway Docker | `docker-compose.yml` + `.env.example` (raiz) |

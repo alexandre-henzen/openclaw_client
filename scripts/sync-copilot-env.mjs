@@ -1,5 +1,5 @@
 /**
- * Propaga variáveis do stack OpenClaw (copilotkit/.env) para api/.env.
+ * Propaga variáveis do stack OpenClaw (`.env` na raiz) para `api/.env`.
  * Mantém JWT_SECRET e demais chaves locais da API; só atualiza chaves do gateway.
  */
 import fs from 'node:fs';
@@ -7,7 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const COPILOT_ENV = path.join(ROOT, 'copilotkit', '.env');
+const GATEWAY_ENV = path.join(ROOT, '.env');
 const API_ENV = path.join(ROOT, 'api', '.env');
 
 const SYNC_KEYS = [
@@ -55,10 +55,10 @@ function serializeEnv(lines) {
 }
 
 export function syncCopilotEnv({ quiet = false } = {}) {
-  const src = parseEnv(COPILOT_ENV);
+  const src = parseEnv(GATEWAY_ENV);
   if (!Object.keys(src).length) {
     if (!quiet) {
-      console.warn('[sync-copilot-env] copilotkit/.env não encontrado — pulando sync');
+      console.warn('[sync-gateway-env] .env na raiz não encontrado — pulando sync (copie de .env.example)');
     }
     return false;
   }
@@ -68,7 +68,6 @@ export function syncCopilotEnv({ quiet = false } = {}) {
     src.OPENCLAW_PAIRING_APPROVE_URL = 'http://127.0.0.1:18790';
   }
 
-  const apiExisting = parseEnv(API_ENV);
   const apiLines = fs.existsSync(API_ENV) ? fs.readFileSync(API_ENV, 'utf8').split('\n') : [];
   const seen = new Set();
   const out = [];
@@ -119,10 +118,13 @@ export function syncCopilotEnv({ quiet = false } = {}) {
 
   fs.writeFileSync(API_ENV, serializeEnv(out));
   if (!quiet) {
-    console.log('[sync-copilot-env] api/.env atualizado a partir de copilotkit/.env');
+    console.log('[sync-gateway-env] api/.env atualizado a partir de .env (raiz)');
   }
   return true;
 }
+
+/** @deprecated use syncCopilotEnv — nome legado do script npm run sync:env */
+export const syncGatewayEnv = syncCopilotEnv;
 
 const invoked = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/'));
 if (invoked) {

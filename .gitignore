@@ -12,6 +12,5 @@ openclaw.log
 playwright-report/
 test-results/
 
-# Referência técnica CopilotKit (checkout local, não versionar)
-# Ancorado na raiz para não ignorar api/src/routes/copilotkit/
-/copilotkit/
+# Gateway stack secrets (copie de .env.example)
+# .env na raiz já está ignorado acima

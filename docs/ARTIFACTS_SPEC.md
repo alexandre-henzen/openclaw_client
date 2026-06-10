@@ -1,6 +1,6 @@
 # SPEC-002 — Visual Artifacts (sandbox / run_code / iframe)
 
-Paridade com `copilotkit/openclaw-copilotkit-official-chat/` para retorno de conteúdo do sandbox, persistência, download e renderização em iframe.
+Paridade de comportamento para retorno de conteúdo do sandbox, persistência, download e renderização em iframe (implementação em `api/src/services/artifacts/` e `client/src/features/artifact/`).
 
 ## Problema
 
@@ -75,8 +75,8 @@ MIME → protocolo: `api/src/services/artifacts/mime-policy.ts` (portado da refe
 - [x] Smoke G13–G17 `test:harness:artifacts` — observer + list + frame + download HTTP
 - [x] E2E live G18 `@live` — iframe `artifact-iframe` na tray
 
-## Referência
+## Referência (implementação neste repositório)
 
-- `copilotkit/openclaw-copilotkit-official-chat/src/lib/openclaw/run-code-observer.ts`
-- `copilotkit/openclaw-copilotkit-official-chat/src/lib/artifacts/`
-- `copilotkit/openclaw-copilotkit-official-chat/src/components/VisualArtifactHost.tsx`
+- `api/src/services/openclaw/run-code-observer.ts`
+- `api/src/services/artifacts/`
+- `client/src/features/artifact/ui/VisualArtifactHost.tsx`

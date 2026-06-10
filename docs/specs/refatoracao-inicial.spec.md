@@ -30,7 +30,7 @@ seguras e verificáveis.
   - Banco: `api/src/data-source.ts` + `api/src/entities/*` (9 entidades).
   - Harness: `scripts/check-invariants.mjs`, `scripts/harness-verify.mjs`, `api/tests/harness/smoke-{copilot,artifacts}.mjs`.
 - **Runtime dependencies:**
-  - OpenClaw Gateway (HTTP `:18789` + clawg-ui em `/v1/clawg-ui`) — via Docker (`copilotkit/docker-compose.yml`, pasta gitignored) ou instalação local.
+  - OpenClaw Gateway (HTTP `:18789` + clawg-ui em `/v1/clawg-ui`) — via Docker (`docker-compose.yml` na raiz) ou instalação local.
   - Pairing helper `:18790`; OpenClaw CLI (`openclaw`) para PTY e pairing fallback.
   - SQLite em `api/data/openclaw.sqlite` (`DB_PATH`); artefatos em filesystem `api/data/artifacts/` (content-addressed `fs:<sha256>`).
   - Node 18+; Docker opcional porém necessário para o stack completo de dev.
@@ -82,7 +82,7 @@ Tudo abaixo é inferência, não fato provado:
 Perguntas que o código não responde:
 
 1. Há instalações em produção multiusuário onde o vazamento de conversas entre usuários (`GET /api/conversation` sem filtro) seria um problema real?
-2. O `copilotkit/` (reference checkout + docker-compose, gitignored) está presente e atualizado em todas as máquinas de dev? O stack Docker é reprodutível a partir de qual fonte?
+2. ~~O `copilotkit/` (reference checkout)~~ **Resolvido (D-013):** stack reprodutível a partir de `docker-compose.yml` + `.env.example` na raiz.
 3. Existe política de retenção/GC para `api/data/artifacts/` e `agui_events`? Hoje não há limpeza visível.
 4. O fluxo `updateService.applyUpdate()` (git pull + restart a partir do GitHub) é usado de fato? Qual o comportamento em instalações via `npm start`/`~/.openclaw_client`?
 5. Qual é o comportamento esperado quando `APP_AUTH_SECRET` muda (todas as app-sessions e device tokens cifrados ficam inválidos)? Há procedimento de rotação?
@@ -210,7 +210,7 @@ Em caso de falha:
 - [x] Criar/atualizar esta spec e `tasks/refatoracao-inicial.cursor-task.md`.
 - [x] (Fase A — 2026-06-09) Testes de caracterização: security (18), auth (11), proxy (3), client units (Vitest, 20). Bugs reais corrigidos: flush do `RUN_FINISHED` em `parseAguiStream`; crash de página em branco em `legacyMessagesToCopilot(undefined)`.
 - [x] (Fase B — 2026-06-09) Código morto do chat legado removido (`useChat`, `MessageList`, `ChatInput`, `useSendMessage`); `doc.yaml` para `copilotkit`/`agui`/`artifacts`/`runs`; G11 corrigido em `docs/HARNESS_REPORT.md`.
-- [ ] (futuro, Fase C) Migrations baseline, ownership de conversas, seed seguro, GC — cada um com ADR (requer resolução dos Unknowns #1/#3/#5).
+- [ ] (futuro, Fase C) ~~Migrations baseline, ownership de conversas, seed seguro, GC~~ — **concluído 2026-06-09** (D-009..D-012; ownership = single-user, sem filtro).
 - [x] (Fases A/B) Verificação completa executada: `npm run harness:verify` — all gates passed (smokes G1–G17 + Playwright live G11/G18/G19). Ver `docs/HARNESS_REPORT.md` (entrada 2026-06-09 Refatoração Fases A/B).
 - [x] (2026-06-09) Lint alinhado ao harness: API migrada de Airbnb → `typescript-eslint` recommended; `harness:verify` inclui lint + `npm run test` (api + client).
 
